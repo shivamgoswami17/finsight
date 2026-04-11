@@ -1,0 +1,29 @@
+{% load static  %}
+<html>
+    <head>
+        <link rel="stylesheet" href={% static "CSS/first.css" %}>
+        
+    </head>   
+    <body>
+        <h1>this is my first template</h1>
+         <h1>User Data Display</h1>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>FNAME</th>
+            <th>LNAME</th>
+            <th>EMAIL</th>
+            <th>MOBILE</th>
+        </tr>
+          {% for i in expense_data %}
+          <tr>
+                <td>{{i.id}}</td>
+                <td>{{i.date}}</td>
+                <td>{{i.amount}}</td>
+                <td>{{i.category}}</td>
+                <td>{{i.description}}</td>
+          </tr>
+           {% endfor %}
+           {% include "footer.html" %}
+    </body>
+</html>
