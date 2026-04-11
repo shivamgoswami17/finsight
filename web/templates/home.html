@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+    <!-- <form action="" method="POST">
+        {% csrf_token %}
+            <input type="text" name="txtuname" placeholder="Enter Your Name">
+            <input type="text" name="txtemail" placeholder="Enter Your Emaill">
+            <button type="submit">Submit</button>
+    </form> -->
+    {% include "navbar.html" %}
+    <h1>User Data Display</h1>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>FNAME</th>
+            <th>LNAME</th>
+            <th>EMAIL</th>
+            <th>MOBILE</th>
+            <th>PASSWORD</th>
+            <th>ADDRESS</th>
+            <th>CITY</th>
+            <th>STATE</th>
+        </tr>
+         {% for i in user_data %}
+          <tr>
+                <td>{{i.id}}</td>
+                <td>{{i.fname}}</td>
+                <td>{{i.lname}}</td>
+                <td>{{i.email}}</td>
+                <td>{{i.mobile}}</td>
+                <td>{{i.password}}</td>
+                <td>{{i.address}}</td>
+                <td>{{i.city}}</td>
+                <td>{{i.state}}</td>
+          </tr>
+          {% endfor %}
+    </table>
+    
+</body>
+</html>
