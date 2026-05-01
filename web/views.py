@@ -358,9 +358,11 @@ def budget_management(request):
     today = date.today()
     current_budget, total_expense, remaining, warning = get_monthly_budget_status(uid, today)
 
+    all_budgets = budget.objects.filter(user_id=uid).order_by('-month')
+
     if warning:
         messages.warning(request, warning)
-        all_budgets = budget.objects.filter(user_id=uid).order_by('-month')
+       
 
     context = {
         'budget': current_budget,
