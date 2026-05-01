@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard | FinSight</title>
+
+    <!-- FONT (Google Poppins) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #eef2f7, #f8fafc);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        h2, h5, h3 {
+            font-weight: 600;
+        }
+
+        /* CARD STYLE */
+        .card {
+            border: none;
+            border-radius: 18px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+        }
+
+        /* STATS CARD */
+        .stat-card {
+            text-align: center;
+            padding: 25px;
+            color: white;
+            border-radius: 18px;
+        }
+
+        .bg-blue {
+            background: linear-gradient(135deg, #4e73df, #6f8cff);
+        }
+
+        .bg-green {
+            background: linear-gradient(135deg, #1cc88a, #3ee6a6);
+        }
+
+        .bg-yellow {
+            background: linear-gradient(135deg, #f6c23e, #ffd36a);
+        }
+
+        .bg-red {
+            background: linear-gradient(135deg, #e74a3b, #ff6b6b);
+        }
+
+        /* TABLE STYLE */
+        table {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: #1f2937 !important;
+            color: white;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: #eef2ff !important;
+            transform: scale(1.01);
+            cursor: pointer;
+        }
+
+        /* SEARCH BOX */
+        input {
+            border-radius: 10px !important;
+        }
+
+        /* HEADER TEXT */
+        h2 {
+            color: #1f2937;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container mt-4">
+
+    <h2 class="text-center mb-4">📊 FinSight Admin Dashboard</h2>
+
+    <!-- HEADER -->
+    {% if selected_user %}
+        <h5 class="text-center mb-3">
+            👤 Selected User: {{ selected_user.fname }} {{ selected_user.lname }}
+        </h5>
+
+        <div class="text-center mb-3">
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary btn-sm">
+                🔄 Reset Selection
+            </a>
+
+            <!-- OPEN DETAILS PAGE -->
+            <a href="{% url 'user_detail' selected_user.id %}" class="btn btn-dark btn-sm">
+                👁 View Full User Details
+            </a>
+        </div>
+    {% else %}
+        <h5 class="text-center mb-3">📊 Showing All Users Data</h5>
+    {% endif %}
+
+    <!-- STATS -->
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-3">
+            <div class="card stat-card bg-blue shadow">
+                <h5>Total Users</h5>
+                <h3>{{ total_users }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card bg-green shadow">
+                <h5>Total Expenses</h5>
+                <h3>₹ {{ total_expenses }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card bg-yellow shadow">
+                <h5>Total Budget</h5>
+                <h3>₹ {{ total_budget }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card bg-red shadow">
+                <h5>This Month</h5>
+                <h3>₹ {{ monthly_expenses }}</h3>
+            </div>
+        </div>
+
+    </div>
+
+   <!-- USERS TABLE -->
+<!-- USERS TABLE -->
+<div class="card shadow p-3">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <h5 class="mb-0">All Users</h5>
+
+        <!-- SEARCH -->
+        <form method="GET" class="d-flex gap-2">
+
+            <input type="text"
+                   name="search"
+                   value="{{ search_query }}"
+                   class="form-control form-control-sm"
+                   placeholder="Search name, email, city...">
+
+            <button class="btn btn-primary btn-sm">🔍</button>
+
+        </form>
+
+    </div>
+
+    <!-- TABLE -->
+    <table class="table table-striped table-bordered">
+
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for u in users %}
+            <tr onclick="window.location='?user_id={{ u.id }}&search={{ search_query }}'"
+                {% if selected_user and selected_user.id == u.id %}class="table-warning"{% endif %}>
+
+                <td>{{ u.fname }} {{ u.lname }}</td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.mobile }}</td>
+                <td>{{ u.city }}</td>
+                <td>{{ u.state }}</td>
+                <td>{{ u.registration_date|date:"d M Y" }}</td>
+
+            </tr>
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+</div>
+
+</div>
+
+</body>
+</html>
