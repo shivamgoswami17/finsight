@@ -92,6 +92,10 @@ def get_monthly_budget_status(uid, target_date=None):
     if target_date is None:
         target_date = date.today()
 
+    # ✅ FIRST ensure budget exists
+    ensure_monthly_budget(uid, target_date)
+
+    # ✅ THEN fetch it
     current_budget = budget.objects.filter(
         user_id=uid,
         month__year=target_date.year,
@@ -106,8 +110,10 @@ def get_monthly_budget_status(uid, target_date=None):
 
     remaining = Decimal('0')
     warning = None
+
     if current_budget:
         remaining = current_budget.amount - total_expense
+
         if remaining <= Decimal('0'):
             warning = "Your budget for this month is finished!"
         elif remaining <= current_budget.amount * Decimal('0.2'):
@@ -175,7 +181,37 @@ def login(request):
 
     return render(request, 'login.html')
 
+def ensure_monthly_budget(uid, target_date=None):
+    if target_date is None:
+        target_date = date.today()
 
+    # Check if current month budget exists
+    exists = budget.objects.filter(
+        user_id=uid,
+        month__year=target_date.year,
+        month__month=target_date.month
+    ).exists()
+
+    if exists:
+        return  # ✅ already exists → do nothing
+
+    # Get last available budget (previous month or any last)
+    last_budget = budget.objects.filter(user_id=uid).order_by('-month').first()
+
+    if last_budget:
+        # ✅ create new budget with same amount
+        budget.objects.create(
+            user_id=uid,
+            month=date(target_date.year, target_date.month, 1),
+            amount=last_budget.amount
+        )
+    else:
+        # ❗ Optional: create default budget if no previous exists
+        budget.objects.create(
+            user_id=uid,
+            month=date(target_date.year, target_date.month, 1),
+            amount=Decimal('0')
+        )
 # ---------------- REGISTER ----------------
 def register(request):
     if request.method == 'POST':
@@ -208,6 +244,7 @@ def expadd(request):
         expense_date = datetime.strptime(date_value, "%Y-%m-%d").date()
 
         current_budget, total_expense, remaining, warning = get_monthly_budget_status(uid, expense_date)
+        
 
         if not current_budget:
             error = "No budget set for the selected month!"
@@ -238,6 +275,53 @@ def expense_list(request):
     if not uid:
         return redirect('login')
 
+    error = None
+
+    # ✅ UPDATE EXPENSE
+    if request.method == 'POST':
+        exp_id = request.POST.get('id')
+
+        exp = get_object_or_404(expense, id=exp_id, user_id=uid)
+
+        new_date = datetime.strptime(request.POST.get('txtdate'), "%Y-%m-%d").date()
+        new_amount = Decimal(request.POST.get('txtamount'))
+        category = request.POST.get('txtcategory')
+        description = request.POST.get('txtdescription')
+
+        # ✅ ensure budget exists
+        ensure_monthly_budget(uid, new_date)
+
+        current_budget = budget.objects.filter(
+            user_id=uid,
+            month__year=new_date.year,
+            month__month=new_date.month
+        ).first()
+
+        if not current_budget:
+            error = "No budget set for the selected month!"
+        else:
+            # exclude current expense
+            monthly_expenses = expense.objects.filter(
+                user_id=uid,
+                date__year=new_date.year,
+                date__month=new_date.month
+            ).exclude(id=exp_id)
+
+            total_other = monthly_expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            remaining = current_budget.amount - total_other
+
+            if remaining - new_amount < Decimal('0'):
+                error = "Updating this expense would exceed the budget!"
+            else:
+                exp.date = new_date
+                exp.amount = new_amount
+                exp.category = category
+                exp.description = description
+                exp.save()
+
+                return redirect('expense_list')
+
+    # ✅ SEARCH
     query = request.GET.get('q', '').strip()
 
     data = expense.objects.filter(user_id=uid)
@@ -257,7 +341,10 @@ def expense_list(request):
             safe=False
         )
 
-    return render(request, 'expense_list.html', {'data': data})
+    return render(request, 'expense_list.html', {
+        'data': data,
+        'error': error
+    })
 #----
 # def expense_list(request):
 #     uid = request.session.get('user_id')
